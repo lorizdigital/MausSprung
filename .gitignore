@@ -1,0 +1,8 @@
+.DS_Store
+._*
+.build/
+build/
+*.app/
+*.zip
+*.dSYM/
+*.xcuserstate
