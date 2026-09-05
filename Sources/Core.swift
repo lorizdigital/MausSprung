@@ -5,6 +5,12 @@ struct Shortcut: Codable, Equatable {
     var keyCode: UInt32
     var modifiers: UInt32
     var keyLabel: String
+    /// Apply the same modifier policy to recorded and persisted shortcuts.
+    var isValid: Bool {
+        let primary = UInt32(controlKey | optionKey | cmdKey)
+        let allowed = primary | UInt32(shiftKey)
+        return keyCode <= 127 && modifiers & primary != 0 && modifiers & ~allowed == 0
+    }
     var label: String {
         [(UInt32(controlKey), "⌃"), (UInt32(optionKey), "⌥"),
          (UInt32(shiftKey), "⇧"), (UInt32(cmdKey), "⌘")]
@@ -37,6 +43,20 @@ struct Binding: Codable, Identifiable {
     var displayUUID: String?
     var displayName: String?
     var shortcut: Shortcut
+    static func decodeValidated(_ data: Data) -> [Binding]? {
+        // Preferences are tiny; reject corrupt or unexpectedly large payloads before decoding.
+        guard data.count <= 65_536,
+              let values = try? JSONDecoder().decode([Binding].self, from: data),
+              values.count == 3, values.map(\.id) == [0, 1, 2],
+              values.allSatisfy({ $0.shortcut.isValid && $0.shortcut.keyLabel.count <= 128
+                  && ($0.displayUUID?.count ?? 0) <= 128 && ($0.displayName?.count ?? 0) <= 512 }) else { return nil }
+        for i in values.indices {
+            for j in values.indices where j > i {
+                if values[i].shortcut.matches(values[j].shortcut) { return nil }
+            }
+        }
+        return values
+    }
     static func defaults() -> [Binding] {
         [UInt32(kVK_ANSI_1), UInt32(kVK_ANSI_2), UInt32(kVK_ANSI_3)].enumerated().map {
             Binding(id: $0.offset, shortcut: Shortcut(keyCode: $0.element,

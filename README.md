@@ -79,3 +79,25 @@ Fehlerberichte und Pull Requests sind willkommen. Bitte bei Fehlern macOS-Versio
 ## Lizenz
 
 [MIT](LICENSE) · Copyright (c) 2026 Loriz Digital
+
+## Signierte und notarisierte Builds
+
+Für die öffentliche Verteilung ist ein **Developer ID Application**-Zertifikat mit privatem Schlüssel im lokalen Schlüsselbund erforderlich. Ein **Apple Development**-Zertifikat reicht dafür nicht aus. Die Zugangsdaten für Apples Notardienst werden einmalig außerhalb des Repositorys im Schlüsselbund gespeichert. `store-credentials` fragt die Werte interaktiv ab:
+
+```sh
+xcrun notarytool store-credentials MausSprung-Notary
+SIGNING_IDENTITY="Developer ID Application: DEIN NAME (TEAMID)" \
+NOTARY_PROFILE="MausSprung-Notary" bash build.sh
+```
+
+Der Build signiert mit Hardened Runtime und Zeitstempel, übermittelt das ZIP an Apple, heftet bei erfolgreicher Prüfung das Ticket an die App und prüft Ticket sowie Gatekeeper-Akzeptanz. Erst danach werden die fertigen Dateien ersetzt. Ohne diese Variablen bleibt ein lokaler Ad-hoc-Build möglich; dieser ist nicht notarisiert. Niemals Passwörter, private Schlüssel oder Zertifikatsexporte ins Repository legen.
+
+## Änderungen in 1.0.1
+
+- Gespeicherte Shortcuts werden mit derselben Modifier-Regel wie neue Aufnahmen geprüft; ungültige IDs, doppelte Shortcuts und übergroße Einstellungen fallen auf Standards zurück.
+- Die Shortcut-Aufnahme prüft die Ziel-ID unmittelbar vor Verwendung.
+- Fehler in Tests werden geworfen und erst nach Aufräumen in einen Prozess-Exit übersetzt. Der Smoke-Test versucht auch bei einem regulären Testfehler die Mausposition wiederherzustellen und meldet einen Fehler der Wiederherstellung. Ein erzwungenes Prozessende oder Betriebssystemabsturz bleibt außerhalb dieser Garantie.
+- Bereits vorhandene App-Ausgaben werden ersetzt statt zusammengeführt. Eine andere App oder ein Symlink als Ziel wird abgewiesen; die alte MausSprung-App bleibt bis zum Austausch als Backup erhalten.
+- Optionaler Developer-ID-/Notarisierungsablauf wie oben. Unterstützung im Build allein bedeutet noch nicht, dass ein veröffentlichter Download bereits notarisiert wurde.
+
+Zusätzliche Verpackungstests: `python3 -B -m unittest discover -s Tests`.

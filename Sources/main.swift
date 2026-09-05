@@ -43,19 +43,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool { showSettings(); return true }
 }
 
-if CommandLine.arguments.contains("--self-test") {
-    runSelfTests()
-} else if CommandLine.arguments.contains("--diagnostics") {
-    _ = NSApplication.shared
-    for display in Display.connected() {
-        print("\(display.name) | \(display.id) | bounds=\(display.bounds) | center=\(display.center)")
+do {
+    if CommandLine.arguments.contains("--self-test") {
+        try runSelfTests()
+    } else if CommandLine.arguments.contains("--diagnostics") {
+        _ = NSApplication.shared
+        for display in Display.connected() {
+            print("\(display.name) | \(display.id) | bounds=\(display.bounds) | center=\(display.center)")
+        }
+    } else if CommandLine.arguments.contains("--smoke-test") {
+        try runSmokeTest()
+    } else {
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        app.setActivationPolicy(.accessory)
+        app.run()
     }
-} else if CommandLine.arguments.contains("--smoke-test") {
-    runSmokeTest()
-} else {
-    let app = NSApplication.shared
-    let delegate = AppDelegate()
-    app.delegate = delegate
-    app.setActivationPolicy(.accessory)
-    app.run()
+
+} catch {
+    fputs("FAIL: \(error)\n", stderr)
+    exit(1) // All throwing test scopes, including cursor restoration, have unwound.
 }

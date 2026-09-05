@@ -13,9 +13,7 @@ final class AppModel: ObservableObject {
 
     init() {
         if let data = UserDefaults.standard.data(forKey: storageKey),
-           let saved = try? JSONDecoder().decode([Binding].self, from: data),
-           saved.count == 3, saved.map(\.id) == [0, 1, 2],
-           saved.allSatisfy({ $0.shortcut.keyCode <= 127 && $0.shortcut.modifiers != 0 }) {
+           let saved = Binding.decodeValidated(data) {
             bindings = saved
         } else { bindings = Binding.defaults() }
         refreshDisplays()
@@ -68,6 +66,7 @@ final class AppModel: ObservableObject {
     func activateShortcuts() { errors = hotkeys.register(bindings) }
 
     func startRecording(_ id: Int) {
+        guard let index = bindings.firstIndex(where: { $0.id == id }) else { return }
         cancelRecording()
         recording = id
         notice = "Jetzt Tastenkombination drücken. Mindestens ⌃, ⌥ oder ⌘ verwenden. Esc bricht ab."
@@ -82,7 +81,7 @@ final class AppModel: ObservableObject {
                 self.notice = "Diese Tastenkombination wird bereits für ein anderes Ziel verwendet."; return nil
             }
             let previous = self.bindings
-            self.bindings[id].shortcut = shortcut
+            self.bindings[index].shortcut = shortcut
             self.finishRecording()
             self.activateShortcuts()
             if let error = self.errors[id] {

@@ -6,3 +6,6 @@ build/
 *.zip
 *.dSYM/
 *.xcuserstate
+
+__pycache__/
+*.pyc
