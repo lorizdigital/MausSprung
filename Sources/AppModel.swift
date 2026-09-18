@@ -6,6 +6,7 @@ final class AppModel: ObservableObject {
     @Published var errors: [Int: String] = [:]
     @Published var recording: Int?
     @Published var notice = ""
+    let launchAtLogin = LaunchAtLoginController()
     private let hotkeys = HotKeyManager()
     private var monitor: Any?
     private var observers: [NSObjectProtocol] = []

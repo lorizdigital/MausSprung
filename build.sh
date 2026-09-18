@@ -16,7 +16,7 @@ mkdir -p "$STAGING_APP/Contents/MacOS" "$STAGING_APP/Contents/Resources"
 # No dependencies or downloads; build for the architecture of this Mac.
 xcrun swiftc -swift-version 5 -O -module-cache-path "$BUILD_CACHE" \
   -target "$(uname -m)-apple-macosx13.0" Sources/*.swift \
-  -framework AppKit -framework SwiftUI -framework Carbon -framework CoreGraphics \
+  -framework AppKit -framework SwiftUI -framework Carbon -framework CoreGraphics -framework ServiceManagement \
   -o "$STAGING_APP/Contents/MacOS/MausSprung"
 cp Info.plist "$STAGING_APP/Contents/Info.plist"
 xattr -cr "$STAGING_APP"

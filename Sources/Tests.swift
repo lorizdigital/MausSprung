@@ -10,6 +10,29 @@ func check(_ condition: @autoclosure () throws -> Bool, _ message: String) throw
     print("PASS: \(message)")
 }
 
+private final class MockLaunchAtLoginService: LaunchAtLoginServicing {
+    var status: LaunchAtLoginStatus
+    var registerError: Error?
+    private(set) var registerCalls = 0
+    private(set) var unregisterCalls = 0
+    private(set) var settingsCalls = 0
+
+    init(status: LaunchAtLoginStatus) { self.status = status }
+
+    func register() throws {
+        registerCalls += 1
+        if let registerError { throw registerError }
+        status = .enabled
+    }
+
+    func unregister() throws {
+        unregisterCalls += 1
+        status = .disabled
+    }
+
+    func openSystemSettings() { settingsCalls += 1 }
+}
+
 func runSelfTests() throws {
     let layouts: [(CGRect, CGPoint)] = [
         (CGRect(x: 0, y: 0, width: 1920, height: 1080), CGPoint(x: 960, y: 540)),
@@ -61,6 +84,34 @@ func runSelfTests() throws {
     } catch let error as TestFailure {
         try check(error.description.contains("Wiederherstellung fehlgeschlagen"), "Wiederherstellungsfehler melden")
     }
+    let loginService = MockLaunchAtLoginService(status: .disabled)
+    let loginController = LaunchAtLoginController(service: loginService)
+    try check(!loginController.isEnabled, "Autostart-Status ausgeschaltet lesen")
+    loginController.setEnabled(true)
+    try check(loginController.isEnabled && loginService.registerCalls == 1,
+              "Autostart über macOS registrieren")
+    loginController.setEnabled(false)
+    try check(!loginController.isEnabled && loginService.unregisterCalls == 1,
+              "Autostart über macOS abmelden")
+    loginService.status = .requiresApproval
+    loginController.refresh()
+    try check(loginController.isEnabled && loginController.requiresApproval,
+              "Ausstehende macOS-Freigabe anzeigen")
+    loginController.openSystemSettings()
+    try check(loginService.settingsCalls == 1, "Anmeldeobjekte-Einstellungen öffnen")
+    loginService.status = .unavailable
+    loginService.registerError = nil
+    loginController.refresh()
+    loginController.setEnabled(true)
+    try check(loginController.isEnabled && loginService.registerCalls == 2,
+              "Registrierung auch ohne vorherigen Status versuchen")
+    loginController.setEnabled(false)
+    loginService.status = .disabled
+    loginService.registerError = NSError(domain: "MausSprungTests", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "simulated registration failure"])
+    loginController.setEnabled(true)
+    try check(!loginController.isEnabled && loginController.message?.contains("simulated registration failure") == true,
+              "Fehler bei der Autostart-Registrierung melden")
     print("Alle Selbsttests bestanden.")
 }
 

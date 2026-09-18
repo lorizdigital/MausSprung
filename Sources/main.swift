@@ -28,7 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         appMenu.submenu = NSMenu()
         appMenu.submenu?.addItem(withTitle: "MausSprung beenden", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         NSApp.mainMenu = mainMenu
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 540),
+        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 640),
                           styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
         window.title = "MausSprung"
         window.isReleasedWhenClosed = false
@@ -40,6 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc func showSettings() { NSApp.activate(ignoringOtherApps: true); window?.makeKeyAndOrderFront(nil) }
     @objc func jumpFromMenu(_ sender: NSMenuItem) { model.jump(sender.tag) }
     func windowWillClose(_ notification: Notification) { model.cancelRecording() }
+    func applicationDidBecomeActive(_ notification: Notification) { model?.launchAtLogin.refresh() }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool { showSettings(); return true }
 }
 

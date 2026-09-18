@@ -57,6 +57,7 @@ struct SettingsView: View {
             Text(model.notice.isEmpty ? "Zum Ändern auf einen Shortcut klicken. Änderungen werden automatisch gespeichert." : model.notice)
                 .font(.callout).foregroundStyle(model.recording == nil ? .secondary : .primary)
                 .frame(height: 42, alignment: .topLeading)
+            LaunchAtLoginSettings(controller: model.launchAtLogin)
             Divider()
             HStack {
                 Button("Standard-Shortcuts") { model.resetShortcuts() }
@@ -64,5 +65,33 @@ struct SettingsView: View {
                 Text("Läuft weiter in der Menüleiste.").font(.caption).foregroundStyle(.secondary)
             }
         }.padding(26).frame(width: 700).background(Color(nsColor: .windowBackgroundColor))
+    }
+}
+
+private struct LaunchAtLoginSettings: View {
+    @ObservedObject var controller: LaunchAtLoginController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle("Bei Anmeldung automatisch starten", isOn: SwiftUI.Binding(
+                get: { controller.isEnabled },
+                set: { controller.setEnabled($0) }
+            ))
+            .toggleStyle(.switch)
+            .accessibilityHint("Startet MausSprung automatisch nach deiner Anmeldung am Mac")
+
+            if controller.requiresApproval {
+                HStack {
+                    Text("Die Freigabe in macOS steht noch aus.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Button("Anmeldeobjekte öffnen") { controller.openSystemSettings() }
+                        .font(.caption)
+                }
+            } else if let message = controller.message {
+                Text(message).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .padding(14)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
     }
 }

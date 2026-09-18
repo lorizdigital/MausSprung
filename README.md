@@ -28,7 +28,7 @@ Die App ist lokal ad-hoc signiert, aber nicht mit einem Apple-Developer-Zertifik
 - Belegte Shortcuts werden angezeigt. Eine erfolglose neue Belegung setzt den bisherigen Shortcut wieder ein. Reservierte macOS- oder App-Kombinationen können trotzdem Vorrang haben; in diesem Fall eine andere Kombination wählen.
 - Während einer Shortcut-Aufnahme sind die drei globalen Shortcuts pausiert; Abbrechen, Fenster schließen oder App-Wechsel aktiviert sie wieder.
 - „Standard-Shortcuts“ setzt nur die Tastenkombinationen zurück; Bildschirmzuordnungen bleiben erhalten.
-- Optionaler Autostart: Die App über die macOS-Systemeinstellungen zu den Anmeldeobjekten hinzufügen. Autostart wird von der App nicht automatisch eingerichtet.
+- Der Schalter „Bei Anmeldung automatisch starten“ verwaltet den Autostart über Apples `SMAppService`. Falls macOS noch eine Freigabe verlangt, führt die App direkt zu den Anmeldeobjekten in den Systemeinstellungen.
 
 ## Bauen
 
@@ -101,3 +101,8 @@ Der Build signiert mit Hardened Runtime und Zeitstempel, übermittelt das ZIP an
 - Optionaler Developer-ID-/Notarisierungsablauf wie oben. Unterstützung im Build allein bedeutet noch nicht, dass ein veröffentlichter Download bereits notarisiert wurde.
 
 Zusätzliche Verpackungstests: `python3 -B -m unittest discover -s Tests`.
+
+## Änderungen in 1.1.0
+
+- Autostart lässt sich in der App ein- und ausschalten. Der angezeigte Zustand stammt direkt aus der macOS-Dienstverwaltung und wird beim Wechsel zurück zur App aktualisiert.
+- Wenn macOS die Ausführung erst freigeben muss, zeigt die App den ausstehenden Status und einen direkten Weg zu den Anmeldeobjekten.
